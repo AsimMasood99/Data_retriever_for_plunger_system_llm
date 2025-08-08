@@ -1,0 +1,30 @@
+{
+  "query_decomposer": {
+    "description": "Deconstructs a user's natural language query into structured, actionable scenarios.",
+    "file": "prompts/decomposer.md",
+    "version": "1.0",
+    "variables": [
+      "query"
+    ]
+  },
+  "sql_query_generator": {
+    "description": "Generates a syntactically correct SQLite query based on a description, schema, and event logic.",
+    "file": "prompts/sqlquery.md",
+    "version": "1.0",
+    "variables": [
+      "schema",
+      "event_details",
+      "description"
+    ]
+  },
+  "final_analyst": {
+    "description": "Synthesizes retrieved data and context into a final natural language answer.",
+    "file": "prompts/final_analyst.md",
+    "version": "1.0",
+    "variables": [
+      "original_query",
+      "retrieved_data_summary",
+      "event_details"
+    ]
+  }
+}
