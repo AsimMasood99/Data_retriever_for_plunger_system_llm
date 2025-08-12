@@ -1,6 +1,61 @@
-import json
 
-# Original content with multiline and unescaped quotes
+# import json
+
+# raw_json = {
+#     "PromptInjection": """You are provided with a complete schema, hierarchy, and event definitions for a Plunger Lift Optimization system. Use this knowledge to interpret user queries and generate SQL queries, even if table names are not explicitly mentioned.
+
+# Schema Overview:
+
+# 1. EVENTS (Main anchor linking all event types)
+#    Fields: cycle_id, basic_pressure_event, cycle_duration_event, gas_volume_produced_event, plunger_arrival_velocity_event, unexpected_low_casing_pressure, plunger_arrival_status_event, plunger_unsafe_velocity_event, unexpected_low_flow, unexpected_low_cycle_duration, unexpected_high_cycle_duration
+
+# 2. CYCLE_DURATION_EVENTS – Fields: start_time, end_time, total_duration, flow_duration, shutin_duration
+# 3. BASIC_PRESSURE_EVENTS – Fields: delta_pt, delta_cp, delta_pl, ph
+# 4. GAS_VOLUME_PRODUCED_EVENTS – Fields: gas_volume, cycle_duration_event
+# 5. PLUNGER_ARRIVAL_VELOCITY_EVENTS – Fields: arrival_speed
+# 6. PLUNGER_UNSAFE_VELOCITY_EVENTS – Fields: velocity_event (FK to PLUNGER_ARRIVAL_VELOCITY_EVENTS)
+# 7. PLUNGER_ARRIVAL_STATUS_EVENTS – Fields: non_arrival, unexpected_casing_pressure, unexpected_low_casing_pressure (FK)
+# 8. UNEXPECTED_LOW_CASING_PRESSURE_EVENTS – Field: basic_pressure_event (FK to BASIC_PRESSURE_EVENTS)
+# 9. UNEXPECTED_LOW_FLOW_EVENTS – Field: gas_volume_produced_event (FK to GAS_VOLUME_PRODUCED_EVENTS)
+# 10. UNEXPECTED_LOW_CYCLE_DURATION_EVENTS – Field: cycle_duration_event (FK)
+# 11. UNEXPECTED_HIGH_CYCLE_DURATION_EVENTS – Field: cycle_duration_event (FK)
+
+# Event Hierarchy:
+# CycleDataEvent → BasicPressureEvent, CycleDurationEvent, GasVolumeProduced, PlungerArrivalVelocity
+# CycleAnomalyEvent → PlungerUnsafeVelocity, PlungerArrivalStatus, UnexpectedLowCasingPressure, UnexpectedLowFlow, UnexpectedLowCycleDuration, UnexpectedHighCycleDuration
+# PlungerArrivalStatus → UnexpectedLowCasingPressure
+# PlungerUnsafeVelocity → PlungerArrivalVelocity
+# UnexpectedLowCasingPressure → BasicPressureEvent
+# UnexpectedLowFlow → GasVolumeProduced
+# UnexpectedLowCycleDuration → CycleDurationEvent
+# UnexpectedHighCycleDuration → CycleDurationEvent
+# GasVolumeProduced → CycleDurationEvent
+
+# Event Definitions:
+# - CycleDataEvent: Top-level container for operational cycle data
+# - CycleAnomalyEvent: Top-level container for anomalies
+# - BasicPressureEvent: Captures delta_Pt, delta_Cp, delta_Pl, ph (psi)
+# - CycleDurationEvent: total_cycle_duration, flow_duration, shutin_duration (seconds)
+# - GasVolumeProduced: gas_volume (m³)
+# - PlungerArrivalVelocityEvent: arrival_speed (m/s)
+# - PlungerArrivalStatus: non_arrival (boolean), UnexpectedLowCasingPressure (boolean)
+# - PlungerUnsafeVelocity: Triggered if arrival_speed > safety threshold
+# - UnexpectedLowCasingPressure: Triggered if delta_Cp is low
+# - UnexpectedLowFlow: Triggered if gas_volume is low
+# - UnexpectedLowCycleDuration: Triggered if durations < lower threshold
+# - UnexpectedHighCycleDuration: Triggered if durations > upper threshold
+
+# Use this information to answer queries like “show average arrival speed in last 2 days” correctly.
+# """
+# }
+
+# output_path = "injection.json"
+# with open(output_path, "w") as f:
+#     json.dump(raw_json, f, indent=2)
+
+# output_path
+
+import json
 raw_json = {
 "PromptInjection":""" The following is a detailed schema and event hierarchy for a Plunger Lift Optimization system. Use this structure to generate SQL queries based on user input. Table names, fields, and relationships are included below.\n\nSchema Overview:\n\n1. EVENTS (Main relational anchor)\n   - Links all event types by storing their primary keys.\n   - Fields: cycle_id, basic_pressure_event, cycle_duration_event, gas_volume_produced_event, plunger_arrival_velocity_event, unexpected_low_casing_pressure, plunger_arrival_status_event, plunger_unsafe_velocity_event, unexpected_low_flow, unexpected_low_cycle_duration, unexpected_high_cycle_duration\n\n2. CYCLE_DURATION_EVENTS\n   - Fields: start_time, end_time, total_duration, flow_duration, shutin_duration\n   - Represents CycleDurationEvent (core metric)\n\n3. BASIC_PRESSURE_EVENTS\n   - Fields: delta_pt, delta_cp, delta_pl, ph\n   - Represents BasicPressureEvent (core metric)\n\n4. GAS_VOLUME_PRODUCED_EVENTS\n   - Fields: gas_volume, cycle_duration_event\n   - Represents GasVolumeProduced event (core metric)\n\n5. PLUNGER_ARRIVAL_VELOCITY_EVENTS\n   - Fields: arrival_speed\n   - Represents PlungerArrivalVelocityEvent\n\n6. PLUNGER_UNSAFE_VELOCITY_EVENTS\n   - Fields: velocity_event (FK to PLUNGER_ARRIVAL_VELOCITY_EVENTS)\n   - Triggered when arrival_speed > safety threshold\n\n7. PLUNGER_ARRIVAL_STATUS_EVENTS\n   - Fields: non_arrival, unexpected_casing_pressure, unexpected_low_casing_pressure (FK)\n   - Represents PlungerArrivalStatus\n\n8. UNEXPECTED_LOW_CASING_PRESSURE_EVENTS\n   - Field: basic_pressure_event (FK to BASIC_PRESSURE_EVENTS)\n   - Triggered when delta_cp is too low\n\n9. UNEXPECTED_LOW_FLOW_EVENTS\n   - Field: gas_volume_produced_event (FK to GAS_VOLUME_PRODUCED_EVENTS)\n   - Triggered when gas_volume is low\n\n10. UNEXPECTED_LOW_CYCLE_DURATION_EVENTS\n    - Field: cycle_duration_event (FK)\n    - Triggered when total/flow/shutin_duration is too short\n\n11. UNEXPECTED_HIGH_CYCLE_DURATION_EVENTS\n    - Field: cycle_duration_event (FK)\n    - Triggered when total/flow/shutin_duration is too long\n\n\nHierarchical Relationships (for reasoning):\n\n- CycleDataEvent →\n  - BasicPressureEvent (BASIC_PRESSURE_EVENTS)\n  - CycleDurationEvent (CYCLE_DURATION_EVENTS)\n  - GasVolumeProduced (GAS_VOLUME_PRODUCED_EVENTS)\n  - PlungerArrivalVelocity (PLUNGER_ARRIVAL_VELOCITY_EVENTS)\n\n- CycleAnomalyEvent →\n  - PlungerUnsafeVelocity (PLUNGER_UNSAFE_VELOCITY_EVENTS)\n  - PlungerArrivalStatus (PLUNGER_ARRIVAL_STATUS_EVENTS)\n  - UnexpectedLowCasingPressure (UNEXPECTED_LOW_CASING_PRESSURE_EVENTS)\n  - UnexpectedLowFlow (UNEXPECTED_LOW_FLOW_EVENTS)\n  - UnexpectedLowCycleDuration (UNEXPECTED_LOW_CYCLE_DURATION_EVENTS)\n  - UnexpectedHighCycleDuration (UNEXPECTED_HIGH_CYCLE_DURATION_EVENTS)\n\n- PlungerArrivalStatus → UnexpectedLowCasingPressure\n- PlungerUnsafeVelocity → PlungerArrivalVelocity\n- UnexpectedLowCasingPressure → BasicPressureEvent\n- UnexpectedLowFlow → GasVolumeProduced\n- UnexpectedLowCycleDuration → CycleDurationEvent\n- UnexpectedHighCycleDuration → CycleDurationEvent\n- GasVolumeProduced → CycleDurationEvent\n\nUse this knowledge to resolve user prompts like \"show average arrival speed in last 2 days\" even when table names are not explicitly mentioned.""",
 
